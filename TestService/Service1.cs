@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Configuration;
 using System.Data;
+using System.Globalization;
 using System.Net;
 using System.ServiceProcess;
 using System.Threading;
@@ -41,8 +42,6 @@ namespace TestService
             string from = "USD";
             string to = "RUB";
 
-            //private SqlConnection connection;
-            //private SqlCommand command;
 
             private static object LockObj = new object();
             bool enabled = true;
@@ -74,13 +73,11 @@ namespace TestService
 
                     var command = new SqlCommand
                     {
+                        CommandText = "SELECT FromCurr , ToCurr FROM CurrencyExchange ",
                         Connection = connection,
                         CommandType = CommandType.Text,
                         CommandTimeout = 10000
                     };
-
-
-                    command.CommandText = "SELECT TOP 1 FromCurr , ToCurr FROM CurrencyExchange ORDER BY Id DESC";
                     connection.Open();
                     SqlDataReader comReader = command.ExecuteReader();
                     comReader.Read();
@@ -97,7 +94,7 @@ namespace TestService
                     {
                         RecordEntry(reader.ReadToEnd());
                     }
-
+                    connection.Close();
                 }
             }
 
@@ -110,31 +107,40 @@ namespace TestService
                         var objects = JObject.Parse(info);
                         foreach (KeyValuePair<String, JToken> data in objects)
                         {
-                            var rateValue = (String)data.Value["5. Exchange Rate"];
-                            var dateValue = (String)data.Value["6. Last Refreshed"];
-                            writer.WriteLine("{0} {1}  ", rateValue, dateValue);
-                            //using (var connection =
-                            //    new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
-                            //{
+                            try
+                            {
+                                var rateValue = (String)data.Value["5. Exchange Rate"];
+                                var dateValue = (String)data.Value["6. Last Refreshed"];
+                                writer.WriteLine("{0} {1}  ", rateValue, dateValue);
+                                using (var connection =
+                                    new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
+                                {
 
-                            //    var command = new SqlCommand
-                            //    {
-                            //        Connection = connection,
-                            //        CommandType = CommandType.Text,
-                            //        CommandTimeout = 10000
-                            //    };
+                                    var command = new SqlCommand
+                                    {
+                                        CommandText = "INSERT INTO CurrencyExchangeStory (Rate,UpdateDate) VALUES (@rateValue,@dateValue)",
+                                        Connection = connection,
+                                        CommandType = CommandType.Text,
+                                        CommandTimeout = 10000
+                                    };
 
+                                    CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                                    ci.NumberFormat.CurrencyDecimalSeparator = ".";
+                                   // writer.WriteLine(temp);
 
-                            //    command.CommandText = "SELECT * FROM CurrencyExchange";
-                            //    connection.Open();
-                            //    SqlDataReader reader = command.ExecuteReader();
-                            //    while (reader.Read())
-                            //    {
-                            //        writer.WriteLine("{0} ", reader[1]);
-                            //    }
+                                    command.Parameters.Add("@rateValue", SqlDbType.Float).Value = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
+                                    command.Parameters.Add("@datevalue", SqlDbType.DateTime).Value = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
+                                    connection.Open();
+                                    command.ExecuteNonQuery();
+                                    writer.Flush();
+                                    connection.Close();
+                                }
+                            }
+                            catch(Exception ex)
+                            {
+                                writer.WriteLine(ex.StackTrace);
+                            }
 
-                            writer.Flush();
-                            //  }
                         }
                     }
                 }
