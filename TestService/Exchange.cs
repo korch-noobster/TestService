@@ -10,6 +10,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using log4net;
 using Newtonsoft.Json.Linq;
 using TestService.Models;
 
@@ -18,10 +19,10 @@ namespace TestService
     class Exchange
     {
 
-        private static object LockObj = new object();
+        private static readonly object LockObj = new object();
         bool enabled = true;
         private CurrencyModel currencies;
-        private DatabaseHelpers workingWithDb;
+        private readonly DatabaseHelpers workingWithDb;
         public Exchange()
         {
             workingWithDb = new DatabaseHelpers();
@@ -33,22 +34,18 @@ namespace TestService
             try
             {
 
-            while (enabled)
-            {
-                GetExRate();
-                Thread.Sleep(10000);
-            }
+                
+                while (enabled)
+                {
+                    GetExRate();
+                    Thread.Sleep(10000);
+                }
 
             }
             catch (Exception e)
-            { 
-            using (StreamWriter writer = new StreamWriter("D:\\templog.txt", true))
             {
-                writer.WriteLine(e.Message);
-
-            }
-
-            throw;
+                Logger.Log.Info(e);
+                throw;
             }
         }
         public void Stop()
@@ -79,20 +76,18 @@ namespace TestService
         {
             lock (LockObj)
             {
-                using (StreamWriter writer = new StreamWriter("D:\\templog.txt", true))
+                var objects = JObject.Parse(info);
+                foreach (KeyValuePair<String, JToken> data in objects)
                 {
-                    var objects = JObject.Parse(info);
-                    foreach (KeyValuePair<String, JToken> data in objects)
-                    {
-                        CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-                        ci.NumberFormat.CurrencyDecimalSeparator = ".";
+                    CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                    ci.NumberFormat.CurrencyDecimalSeparator = ".";
 
-                        float exRate = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
-                        DateTime lastRefreshed = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
-                        workingWithDb.SetDataToStoryTable(currencies, exRate, lastRefreshed);
+                    float exRate = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
+                    DateTime lastRefreshed = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
+                    workingWithDb.SetDataToStoryTable(currencies, exRate, lastRefreshed);
 
-                    }
                 }
+
             }
         }
     }

@@ -9,6 +9,8 @@ using System.Globalization;
 using System.Net;
 using System.ServiceProcess;
 using System.Threading;
+using log4net;
+using log4net.Config;
 using TestService.Models;
 
 namespace TestService
@@ -16,9 +18,10 @@ namespace TestService
     public partial class Service1 : ServiceBase
     {
         private Exchange exchange;
-     
+
         public Service1()
         {
+
             InitializeComponent();
             CanStop = true;
             CanPauseAndContinue = true;

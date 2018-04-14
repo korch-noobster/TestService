@@ -4,6 +4,8 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
+using log4net;
+using log4net.Config;
 
 namespace TestService
 {
@@ -14,6 +16,7 @@ namespace TestService
         /// </summary>
         static void Main()
         {
+            Logger.InitLogger();
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {
