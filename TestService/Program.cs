@@ -4,8 +4,6 @@ using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading.Tasks;
-using log4net;
-using log4net.Config;
 using TestProjectLib;
 
 namespace TestService

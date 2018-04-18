@@ -8,6 +8,7 @@ namespace TestProjectLib.Models
 {
     public class CurrencyModel
     {
+        public int Id { get; set; }
         public string fromCurr { get; set; }
         public string toCurr { get; set; }
     }

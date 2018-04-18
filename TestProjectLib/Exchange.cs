@@ -34,7 +34,7 @@ namespace TestProjectLib
             try
             {
 
-                
+
                 while (enabled)
                 {
                     GetExRate();
@@ -62,7 +62,6 @@ namespace TestProjectLib
                 "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=" +
                 currencies.fromCurr +
                 "&to_currency=" + currencies.toCurr + "&apikey=" + ConfigurationSettings.AppSettings["APIKey"]);
-
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             using (Stream stream = response.GetResponseStream())
@@ -81,7 +80,6 @@ namespace TestProjectLib
                 {
                     CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
                     ci.NumberFormat.CurrencyDecimalSeparator = ".";
-
                     float exRate = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
                     DateTime lastRefreshed = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
                     workingWithDb.SetDataToStoryTable(currencies, exRate, lastRefreshed);

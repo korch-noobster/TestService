@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -9,8 +9,6 @@ using System.Globalization;
 using System.Net;
 using System.ServiceProcess;
 using System.Threading;
-using log4net;
-using log4net.Config;
 using TestProjectLib.Models;
 using TestProjectLib;
 
