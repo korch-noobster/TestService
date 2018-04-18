@@ -7,11 +7,11 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TestService.Models;
+using TestProjectLib.Models;
 
-namespace TestService
+namespace TestProjectLib
 {
-    class DatabaseHelpers
+    public class DatabaseHelpers
     {
         private SqlConnection connectionToTestDb;
         private SqlCommand commandsForDb;

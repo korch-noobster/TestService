@@ -11,7 +11,8 @@ using System.ServiceProcess;
 using System.Threading;
 using log4net;
 using log4net.Config;
-using TestService.Models;
+using TestProjectLib.Models;
+using TestProjectLib;
 
 namespace TestService
 {

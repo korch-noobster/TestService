@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TestService.Models
+namespace TestProjectLib.Models
 {
-    class CurrencyModel
+    public class CurrencyModel
     {
         public string fromCurr { get; set; }
         public string toCurr { get; set; }

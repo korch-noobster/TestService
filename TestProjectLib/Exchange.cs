@@ -12,11 +12,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using log4net;
 using Newtonsoft.Json.Linq;
-using TestService.Models;
+using TestProjectLib.Models;
 
-namespace TestService
+namespace TestProjectLib
 {
-    class Exchange
+    public class Exchange
     {
 
         private static readonly object LockObj = new object();
