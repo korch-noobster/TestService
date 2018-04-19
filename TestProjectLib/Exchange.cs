@@ -23,6 +23,7 @@ namespace TestProjectLib
         bool enabled = true;
         private CurrencyModel currencies;
         private readonly DatabaseHelpers workingWithDb;
+        Task[] GetInfo=new Task[10];
         public Exchange()
         {
             workingWithDb = new DatabaseHelpers();
@@ -33,11 +34,16 @@ namespace TestProjectLib
         {
             try
             {
-
-
                 while (enabled)
                 {
-                    GetExRate();
+                    //int j = 272;
+                    //Logger.Log.Info(j);
+                    //for (int i = 0; i < 2; i++)
+                    //{
+                    //    GetInfo[i] = Task.Factory.StartNew(() => GetExRate(j++));
+                    //    Logger.Log.Info(j);
+                    //}
+
                     Thread.Sleep(10000);
                 }
 
@@ -47,21 +53,23 @@ namespace TestProjectLib
                 Logger.Log.Info(e);
                 throw;
             }
+
         }
         public void Stop()
         {
-
+            //Task.WaitAll(GetInfo);
             enabled = false;
         }
 
-        private void GetExRate()
+        private void GetExRate(int id)
         {
             currencies = new CurrencyModel();
-            currencies = workingWithDb.GetCurrencyInfo();
+            currencies = workingWithDb.GetCurrencies(id);
+            string fromCurrency = workingWithDb.GetCurrencyInfo(currencies.fromCurr).Trim();
+            string toCurrency = workingWithDb.GetCurrencyInfo(currencies.toCurr).Trim();
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
-                "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=" +
-                currencies.fromCurr +
-                "&to_currency=" + currencies.toCurr + "&apikey=" + ConfigurationSettings.AppSettings["APIKey"]);
+                "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=" + fromCurrency +
+                "&to_currency=" + toCurrency + "&apikey=" + ConfigurationSettings.AppSettings["APIKey"]);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             using (Stream stream = response.GetResponseStream())

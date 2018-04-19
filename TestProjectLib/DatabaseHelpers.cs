@@ -16,22 +16,41 @@ namespace TestProjectLib
     {
         private IDbConnection connectionToTestDb;
 
-        public DatabaseHelpers()
+        public CurrencyModel GetCurrencies(int id)
         {
-            connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]);
+            using (connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
+            {
+                CurrencyModel currentCurrencies = connectionToTestDb
+                    .Query<CurrencyModel>("SELECT * FROM CurrencyExchange where id=@id ", new { id }).FirstOrDefault();
+                return currentCurrencies;
+            }
         }
 
-        public CurrencyModel GetCurrencyInfo()
+        public string GetCurrencyInfo(int id)
         {
-            CurrencyModel currentCurrencies = connectionToTestDb.Query<CurrencyModel>("SELECT * FROM CurrencyExchange ").FirstOrDefault();
-            return currentCurrencies;
+            using (connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
+            {
+                String currency = connectionToTestDb
+                    .Query<String>("SELECT Currency_code FROM Currencies where id=@id ", new { id }).FirstOrDefault();
+                return currency;
+            }
         }
+
 
         public void SetDataToStoryTable(CurrencyModel currenciesToInsert, float exRate, DateTime lastRefreshed)
         {
-            var sqlQuery = "INSERT INTO CurrencyExchangeStory(FromCurr, ToCurr, Rate, UpdateDate) VALUES(@FromCurr, @ToCurr, @rateValue, @dateValue)";
-            connectionToTestDb.Execute(sqlQuery,
-                new {FromCurr=currenciesToInsert.fromCurr, ToCurr=currenciesToInsert.toCurr,rateValue= exRate,dateValue= lastRefreshed, });
+            using (connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
+            {
+                var sqlQuery =
+                    "INSERT INTO CurrencyExchangeStory(exchange_id,Rate, UpdateDate) VALUES(@exchange_id, @rateValue, @dateValue)";
+                connectionToTestDb.Execute(sqlQuery,
+                    new
+                    {
+                        exchange_id=currenciesToInsert.Id,
+                        rateValue = exRate,
+                        dateValue = lastRefreshed,
+                    });
+            }
         }
     }
 }
