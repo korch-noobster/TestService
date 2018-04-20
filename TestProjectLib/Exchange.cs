@@ -10,6 +10,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using CsvHelper;
 using log4net;
 using Newtonsoft.Json.Linq;
 using TestProjectLib.Models;
@@ -21,9 +22,7 @@ namespace TestProjectLib
 
         private static readonly object LockObj = new object();
         bool enabled = true;
-        private CurrencyModel currencies;
         private readonly DatabaseHelpers workingWithDb;
-        Task[] GetInfo=new Task[10];
         public Exchange()
         {
             workingWithDb = new DatabaseHelpers();
@@ -32,38 +31,37 @@ namespace TestProjectLib
 
         public void Start()
         {
+            var ts = new CancellationTokenSource();
+            CancellationToken ct = ts.Token;
             try
             {
                 while (enabled)
                 {
-                    //int j = 272;
-                    //Logger.Log.Info(j);
-                    //for (int i = 0; i < 2; i++)
-                    //{
-                    //    GetInfo[i] = Task.Factory.StartNew(() => GetExRate(j++));
-                    //    Logger.Log.Info(j);
-                    //}
-
+                    Parallel.For(272, 275, new ParallelOptions { CancellationToken = ct }, GetExRate);
                     Thread.Sleep(10000);
                 }
 
+                ts.Cancel();
             }
             catch (Exception e)
             {
                 Logger.Log.Info(e);
                 throw;
             }
-
+            finally
+            {
+                ts.Dispose();
+            }
         }
         public void Stop()
         {
-            //Task.WaitAll(GetInfo);
             enabled = false;
         }
 
         private void GetExRate(int id)
         {
-            currencies = new CurrencyModel();
+
+            CurrencyModel currencies = new CurrencyModel();
             currencies = workingWithDb.GetCurrencies(id);
             string fromCurrency = workingWithDb.GetCurrencyInfo(currencies.fromCurr).Trim();
             string toCurrency = workingWithDb.GetCurrencyInfo(currencies.toCurr).Trim();
@@ -71,6 +69,7 @@ namespace TestProjectLib
                 "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=" + fromCurrency +
                 "&to_currency=" + toCurrency + "&apikey=" + ConfigurationSettings.AppSettings["APIKey"]);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             using (Stream stream = response.GetResponseStream())
             using (StreamReader reader = new StreamReader(stream))
@@ -79,22 +78,33 @@ namespace TestProjectLib
             }
 
         }
-        private void RecordEntry(string info, CurrencyModel currencies)
+        private int RecordEntry(string info, CurrencyModel currencies)
         {
             lock (LockObj)
             {
                 var objects = JObject.Parse(info);
                 foreach (KeyValuePair<String, JToken> data in objects)
                 {
-                    CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-                    ci.NumberFormat.CurrencyDecimalSeparator = ".";
-                    float exRate = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
-                    DateTime lastRefreshed = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
-                    workingWithDb.SetDataToStoryTable(currencies, exRate, lastRefreshed);
-
+                    if (data.Key != "Realtime Currency Exchange Rate")
+                    {
+                        return 1;
+                    }
+                    //CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                    //ci.NumberFormat.CurrencyDecimalSeparator = ".";
+                    //float exRate = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
+                    //DateTime lastRefreshed = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
+                    // workingWithDb.SetDataToStoryTable(currencies, exRate, lastRefreshed);
+                    using (TextWriter writer = new StreamWriter("D:\\output.csv", true))
+                    {
+                        var output = new CsvWriter(writer);
+                        output.WriteField(currencies.Id);
+                        output.WriteField(data.Value["5. Exchange Rate"].ToString());
+                        output.WriteField(data.Value["6. Last Refreshed"].ToString());
+                        output.NextRecord();
+                    }
                 }
-
             }
+            return 0;
         }
     }
 }
