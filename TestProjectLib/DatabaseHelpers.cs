@@ -29,7 +29,7 @@ namespace TestProjectLib
 
         public string GetCurrencyInfo(int id)
         {
-           
+
             using (var connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
             {
                 String currency = connectionToTestDb
@@ -38,22 +38,22 @@ namespace TestProjectLib
             }
         }
 
-
-        //public void SetDataToStoryTable(CurrencyModel currenciesToInsert, float exRate, DateTime lastRefreshed)
-        //{
-          
-        //    using (var connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
-        //    {
-        //        var sqlQuery =
-        //            "INSERT INTO CurrencyExchangeStory(exchange_id,Rate, UpdateDate) VALUES(@exchange_id, @rateValue, @dateValue)";
-        //        connectionToTestDb.Execute(sqlQuery,
-        //            new
-        //            {
-        //                exchange_id = currenciesToInsert.Id,
-        //                rateValue = exRate,
-        //                dateValue = lastRefreshed,
-        //            });
-        //    }
-        //}
+        public int UpdateCurrencies(String output)
+        {
+            string result;
+            using (var connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))
+            {
+                result= connectionToTestDb
+                   .Query<String>("Exec AddCurrencies @output", new { output }).FirstOrDefault();
+            }
+            if (result==null)
+            {
+                return 0;
+            }
+            else
+            {
+                return 1;
+            }
+        }
     }
 }

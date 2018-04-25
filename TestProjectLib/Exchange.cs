@@ -23,6 +23,7 @@ namespace TestProjectLib
         private static readonly object LockObj = new object();
         bool enabled = true;
         private readonly DatabaseHelpers workingWithDb;
+        String path = "D:\\output.csv";
         public Exchange()
         {
             workingWithDb = new DatabaseHelpers();
@@ -42,6 +43,7 @@ namespace TestProjectLib
                 }
 
                 ts.Cancel();
+                workingWithDb.UpdateCurrencies(path);
             }
             catch (Exception e)
             {
@@ -89,11 +91,6 @@ namespace TestProjectLib
                     {
                         return 1;
                     }
-                    //CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-                    //ci.NumberFormat.CurrencyDecimalSeparator = ".";
-                    //float exRate = float.Parse(data.Value["5. Exchange Rate"].ToString(), NumberStyles.Any, ci);
-                    //DateTime lastRefreshed = DateTime.Parse(data.Value["6. Last Refreshed"].ToString());
-                    // workingWithDb.SetDataToStoryTable(currencies, exRate, lastRefreshed);
                     using (TextWriter writer = new StreamWriter("D:\\output.csv", true))
                     {
                         var output = new CsvWriter(writer);
