@@ -1,7 +1,12 @@
-﻿using System.ServiceProcess;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.ServiceProcess;
+using System.Text;
+using System.Threading.Tasks;
 using TestProjectLib;
 
-namespace TestService
+namespace WriteService
 {
     static class Program
     {
@@ -14,7 +19,7 @@ namespace TestService
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]
             {
-                new Service1()
+                new WriteFile()
             };
             ServiceBase.Run(ServicesToRun);
         }

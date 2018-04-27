@@ -2,15 +2,13 @@
 using System.Threading;
 using TestProjectLib;
 
-namespace TestService
+namespace WriteService
 {
-    public partial class Service1 : ServiceBase
+    public partial class WriteFile : ServiceBase
     {
-        private Exchange exchange;
-
-        public Service1()
+        private Tracker tracker;
+        public WriteFile()
         {
-
             InitializeComponent();
             CanStop = true;
             CanPauseAndContinue = true;
@@ -19,18 +17,16 @@ namespace TestService
 
         protected override void OnStart(string[] args)
         {
-            exchange = new Exchange();
-            Thread loggerThread = new Thread(exchange.Start);
+            tracker = new Tracker();
+            Thread loggerThread = new Thread(tracker.Start);
             loggerThread.Start();
         }
 
         protected override void OnStop()
         {
 
-            exchange.Stop();
+            tracker.Stop();
             Thread.Sleep(1000);
         }
-
     }
 }
-
