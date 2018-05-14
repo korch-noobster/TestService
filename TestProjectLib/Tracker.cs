@@ -11,26 +11,23 @@ namespace TestProjectLib
     public class Tracker
     {
 
-        FileSystemWatcher watcher;
+        private readonly FileSystemWatcher _watcher;
         private static readonly object LockObj = new object();
-        bool enabled = true;
-        private readonly DatabaseHelpers workingWithDb;
+        private bool _enabled = true;
+        private readonly DatabaseHelpers _workingWithDb;
         public Tracker()
         {
-            workingWithDb = new DatabaseHelpers();
-            watcher = new FileSystemWatcher("D:\\Values");
-            watcher.Created += Watcher_Created;
-            Logger.Log.Info("hello");
-
+            _workingWithDb = new DatabaseHelpers();
+            _watcher = new FileSystemWatcher("D:\\Values");
+            _watcher.Created += Watcher_Created;
         }
 
         public void Start()
         {
             try
             {
-                Logger.Log.Info("hello2");
-                watcher.EnableRaisingEvents = true;
-                while (enabled)
+                _watcher.EnableRaisingEvents = true;
+                while (_enabled)
                 {
                     Thread.Sleep(1000);
                 }
@@ -43,22 +40,18 @@ namespace TestProjectLib
         }
         public void Stop()
         {
-            Logger.Log.Info("hello3");
-            watcher.EnableRaisingEvents = false;
-            enabled = false;
+            _watcher.EnableRaisingEvents = false;
+            _enabled = false;
         }
 
-        // создание файлов
         private void Watcher_Created(object sender, FileSystemEventArgs e)
         {
-            Logger.Log.Info(e.FullPath);
             UpdateDbInfo(e.FullPath);
         }
         private void UpdateDbInfo(string filePath)
         {
-            Logger.Log.Info("it alive");
             Thread.Sleep(180000);
-            workingWithDb.UpdateCurrencies(filePath);
+            _workingWithDb.UpdateCurrencies(filePath);
         }
     }
 }

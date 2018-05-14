@@ -18,43 +18,43 @@ namespace TestProjectLib
     {
 
         private static readonly object LockObj = new object();
-        bool enabled = true;
-        private readonly DatabaseHelpers workingWithDb;
-        String path;
-        System.Timers.Timer tmrExecutor = new System.Timers.Timer();
-        public static NamedPipeClientStream client;
-     
+        private bool _enabled = true;
+        private readonly DatabaseHelpers _workingWithDb;
+        private string _path;
+        private readonly System.Timers.Timer _tmrExecutor = new System.Timers.Timer();
+        public static NamedPipeClientStream Client;
+
         public Exchange()
         {
-            workingWithDb = new DatabaseHelpers();
-            client = new NamedPipeClientStream(".", "FileName", PipeDirection.Out, PipeOptions.Asynchronous);
+            _workingWithDb = new DatabaseHelpers();
+            Client = new NamedPipeClientStream(".", "FileName", PipeDirection.Out, PipeOptions.Asynchronous);
         }
 
 
         public void Start()
         {
-            tmrExecutor.Elapsed += new ElapsedEventHandler(NewFileWithRates);
-            tmrExecutor.Interval = 120000;
-            tmrExecutor.Enabled = true;
-            tmrExecutor.Start();
+            _tmrExecutor.Elapsed += new ElapsedEventHandler(NewFileWithRates);
+            _tmrExecutor.Interval = 120000;
+            _tmrExecutor.Enabled = true;
+            _tmrExecutor.Start();
         }
-      
+
         private void NewFileWithRates(object sender, ElapsedEventArgs e)
         {
-            path = String.Format("D:\\Values\\{0}_{1}_{2}_{3}_{4}.csv", DateTime.Now.Day, DateTime.Now.Month, DateTime.Now.Year, DateTime.Now.Hour, DateTime.Now.Minute);
+            _path = String.Format("D:\\Values\\{0}_{1}_{2}_{3}_{4}.csv", DateTime.Now.Day, DateTime.Now.Month, DateTime.Now.Year, DateTime.Now.Hour, DateTime.Now.Minute);
 
             var ts = new CancellationTokenSource();
-            CancellationToken ct = ts.Token;
+            var ct = ts.Token;
             try
             {
-                while (enabled)
+                while (_enabled)
                 {
                     Parallel.For(272, 275, new ParallelOptions { CancellationToken = ct }, GetExRate);
-                    Thread.Sleep(10000);
+                    Thread.Sleep(60000);
                 }
 
                 ts.Cancel();
-            
+
             }
             catch (Exception ex)
             {
@@ -68,17 +68,17 @@ namespace TestProjectLib
         }
         public void Stop()
         {
-            enabled = false;
+            _enabled = false;
         }
 
         private void GetExRate(int id)
         {
 
-            CurrencyModel currencies = new CurrencyModel();
-            currencies = workingWithDb.GetCurrencies(id);
-            string fromCurrency = workingWithDb.GetCurrencyInfo(currencies.fromCurr).Trim();
-            string toCurrency = workingWithDb.GetCurrencyInfo(currencies.toCurr).Trim();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(
+            var currencies = new CurrencyModel();
+            currencies = _workingWithDb.GetCurrencies(id);
+            var fromCurrency = _workingWithDb.GetCurrencyInfo(currencies.FromCurr).Trim();
+            var toCurrency = _workingWithDb.GetCurrencyInfo(currencies.ToCurr).Trim();
+            var request = (HttpWebRequest)WebRequest.Create(
                 "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=" + fromCurrency +
                 "&to_currency=" + toCurrency + "&apikey=" + ConfigurationSettings.AppSettings["APIKey"]);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
@@ -91,18 +91,20 @@ namespace TestProjectLib
             }
 
         }
-        private int RecordEntry(string info, CurrencyModel currencies)
+        private void RecordEntry(string info, CurrencyModel currencies)
         {
             lock (LockObj)
             {
+                
                 var objects = JObject.Parse(info);
-                foreach (KeyValuePair<String, JToken> data in objects)
+                foreach (KeyValuePair<string, JToken> data in objects)
                 {
+                    Logger.Log.Info(data);
                     if (data.Key != "Realtime Currency Exchange Rate")
                     {
-                        return 1;
+                        return;
                     }
-                    using (TextWriter writer = new StreamWriter(path, true))
+                    using (TextWriter writer = new StreamWriter(_path, true))
                     {
                         var output = new CsvWriter(writer);
                         output.WriteField(currencies.Id);
@@ -112,7 +114,6 @@ namespace TestProjectLib
                     }
                 }
             }
-            return 0;
         }
     }
 }

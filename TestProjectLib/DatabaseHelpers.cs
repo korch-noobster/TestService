@@ -14,9 +14,6 @@ namespace TestProjectLib
 {
     public class DatabaseHelpers
     {
-
-        //private IDbConnection connectionToTestDb;
-
         public CurrencyModel GetCurrencies(int id)
         {
             using (var connectionToTestDb = new SqlConnection(ConfigurationSettings.AppSettings["connectionString"]))

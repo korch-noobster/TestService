@@ -9,8 +9,8 @@ namespace TestProjectLib.Models
     public class CurrencyModel
     {
         public int Id { get; set; }
-        public int fromCurr { get; set; }
-        public int toCurr { get; set; }
+        public int FromCurr { get; set; }
+        public int ToCurr { get; set; }
         public string Abbreviation { get; set; }
     }
 }
